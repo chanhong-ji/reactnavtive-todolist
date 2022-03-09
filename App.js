@@ -4,9 +4,13 @@ import {
   View,
   TouchableOpacity,
   TextInput,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import { useState } from "react";
 import { theme } from "./colors";
+
+const deviceWidth = Dimensions.get("window").width;
 
 export default function App() {
   const [working, setWorking] = useState(true);
@@ -46,6 +50,15 @@ export default function App() {
             setText("");
           }}
         ></TextInput>
+        <ScrollView style={styles.todos}>
+          {Object.keys(todos).map((key) =>
+            todos[key].work === working ? (
+              <View style={styles.todo} key={key}>
+                <Text>{todos[key].text}</Text>
+              </View>
+            ) : null
+          )}
+        </ScrollView>
       </View>
     </View>
   );
@@ -75,5 +88,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 10,
     fontSize: 15,
+  },
+  todos: { paddingHorizontal: deviceWidth * 0.05, marginTop: 20 },
+  todo: {
+    backgroundColor: theme.todoBg,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 10,
   },
 });
