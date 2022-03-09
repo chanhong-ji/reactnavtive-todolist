@@ -28,7 +28,25 @@ export default function App() {
           </Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.main}></View>
+      <View style={styles.main}>
+        <TextInput
+          style={styles.input}
+          placeholder={working ? "Write to do..." : "Where do you want to go?"}
+          onChangeText={(event) => {
+            setText(event);
+          }}
+          value={text}
+          returnKeyType="send"
+          onSubmitEditing={() => {
+            if (text == "") return;
+            setTodos((prev) => ({
+              ...prev,
+              [Date.now()]: { text, work: working },
+            }));
+            setText("");
+          }}
+        ></TextInput>
+      </View>
     </View>
   );
 }
@@ -49,4 +67,13 @@ const styles = StyleSheet.create({
   },
 
   main: { flex: 5 },
+  input: {
+    backgroundColor: theme.title,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    marginTop: 10,
+    fontSize: 15,
+  },
 });
