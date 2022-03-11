@@ -15,6 +15,7 @@ import { Fontisto } from "@expo/vector-icons";
 
 const deviceWidth = Dimensions.get("window").width;
 const STORAGE_KEY = "@todos";
+const CATEGORY_KEY = "@work";
 
 export default function App() {
   const [working, setWorking] = useState(true);
@@ -24,7 +25,10 @@ export default function App() {
   const loadTodos = async () => {
     try {
       await AsyncStorage.getItem(STORAGE_KEY).then((value) =>
-        setTodos(JSON.parse(value) || {})
+        setTodos(JSON.parse(value) ?? {})
+      );
+      await AsyncStorage.getItem(CATEGORY_KEY).then((value) =>
+        setWorking(Boolean(JSON.parse(value)) ?? true)
       );
     } catch (error) {
       console.log("loadTodos error:");
@@ -39,6 +43,26 @@ export default function App() {
       console.log("saveTodos error:");
       console.log(error);
     }
+  };
+
+  const saveCategory = async (boolean) => {
+    try {
+      await AsyncStorage.setItem(CATEGORY_KEY, JSON.stringify(boolean));
+    } catch (error) {
+      console.log("saveCategory error:");
+      console.log(error);
+    }
+  };
+
+  const createTodo = async () => {
+    const newTodos = {
+      ...todos,
+      [Date.now()]: { text, working },
+    };
+    if (text == "") return;
+    setTodos(newTodos);
+    await saveTodos(newTodos);
+    setText("");
   };
 
   const deleteTodo = (key) => {
@@ -64,12 +88,22 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setWorking(true)}>
+        <TouchableOpacity
+          onPress={() => {
+            setWorking(true);
+            saveCategory(true);
+          }}
+        >
           <Text style={{ ...styles.option, color: working ? "white" : "grey" }}>
             Work
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setWorking(false)}>
+        <TouchableOpacity
+          onPress={() => {
+            setWorking(false);
+            saveCategory(false);
+          }}
+        >
           <Text
             style={{ ...styles.option, color: !working ? "white" : "grey" }}
           >
@@ -86,16 +120,7 @@ export default function App() {
           }}
           value={text}
           returnKeyType="send"
-          onSubmitEditing={async () => {
-            const newTodos = {
-              ...todos,
-              [Date.now()]: { text, working },
-            };
-            if (text == "") return;
-            setTodos(newTodos);
-            await saveTodos(newTodos);
-            setText("");
-          }}
+          onSubmitEditing={createTodo}
         ></TextInput>
         <ScrollView style={styles.todos}>
           {Object.keys(todos).map((key) =>
