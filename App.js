@@ -6,10 +6,12 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { theme } from "./colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Fontisto } from "@expo/vector-icons";
 
 const deviceWidth = Dimensions.get("window").width;
 const STORAGE_KEY = "@todos";
@@ -25,6 +27,7 @@ export default function App() {
         setTodos(JSON.parse(value) || {})
       );
     } catch (error) {
+      console.log("loadTodos error:");
       console.log(error);
     }
   };
@@ -32,10 +35,26 @@ export default function App() {
   const saveTodos = async (todos) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-      console.log(todos);
     } catch (error) {
+      console.log("saveTodos error:");
       console.log(error);
     }
+  };
+
+  const deleteTodo = (key) => {
+    Alert.alert("Delete", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "Ok",
+        style: "destructive",
+        onPress: () => {
+          const newTodos = { ...todos };
+          delete newTodos[key];
+          setTodos(newTodos);
+          saveTodos(newTodos);
+        },
+      },
+    ]);
   };
 
   useEffect(() => {
@@ -83,6 +102,9 @@ export default function App() {
             todos[key].working === working ? (
               <View style={styles.todo} key={key}>
                 <Text>{todos[key].text}</Text>
+                <TouchableOpacity onPress={() => deleteTodo(key)}>
+                  <Fontisto name="trash" size={20} color="black" />
+                </TouchableOpacity>
               </View>
             ) : null
           )}
@@ -119,6 +141,8 @@ const styles = StyleSheet.create({
   },
   todos: { paddingHorizontal: deviceWidth * 0.05, marginTop: 20 },
   todo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     backgroundColor: theme.todoBg,
     paddingVertical: 20,
     paddingHorizontal: 10,
