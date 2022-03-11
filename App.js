@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { theme } from "./colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Fontisto } from "@expo/vector-icons";
+import { SwipeListView } from "react-native-swipe-list-view";
 
 const deviceWidth = Dimensions.get("window").width;
 const STORAGE_KEY = "@todos";
@@ -81,6 +82,17 @@ export default function App() {
     ]);
   };
 
+  const editTodo = (key) => {
+    Alert.prompt("Edit title", "Please submit new title", (input) => {
+      if (text !== "") {
+        const newTodos = { ...todos };
+        newTodos[key].text = input;
+        saveTodos(newTodos);
+        setTodos(newTodos);
+      }
+    });
+  };
+
   useEffect(() => {
     loadTodos();
   }, []);
@@ -122,18 +134,49 @@ export default function App() {
           returnKeyType="send"
           onSubmitEditing={createTodo}
         ></TextInput>
-        <ScrollView style={styles.todos}>
-          {Object.keys(todos).map((key) =>
-            todos[key].working === working ? (
-              <View style={styles.todo} key={key}>
-                <Text>{todos[key].text}</Text>
-                <TouchableOpacity onPress={() => deleteTodo(key)}>
-                  <Fontisto name="trash" size={20} color="black" />
+        <SwipeListView
+          useFlatList
+          contentContainerStyle={styles.todos}
+          data={Object.keys(todos).reduce((result, key) => {
+            if (todos[key].working === working) {
+              return [...result, { key, text: todos[key].text, working }];
+            } else {
+              return [...result];
+            }
+          }, [])}
+          renderItem={(data, rowMap) => (
+            <View style={styles.todo} key={data.item.key}>
+              <Text>{data.item.text}</Text>
+            </View>
+          )}
+          renderHiddenItem={(data) => (
+            <View style={styles.hidden}>
+              <View style={styles.hiddenleft}>
+                <TouchableOpacity onPress={() => editTodo(data.item.key)}>
+                  <View style={styles.hiddenEdit}>
+                    <Text>Edit</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => deleteTodo(data.item.key)}>
+                  <View style={styles.hiddenDelete}>
+                    <Text>Delete</Text>
+                  </View>
                 </TouchableOpacity>
               </View>
-            ) : null
+              <View style={styles.hiddenright}>
+                <TouchableOpacity onPress={() => console.log("done pressed")}>
+                  <View style={styles.hiddenDone}>
+                    <Text>Done</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
-        </ScrollView>
+          leftOpenValue={150}
+          stopLeftSwipe={150}
+          rightOpenValue={-100}
+          stopRightSwipe={-100}
+        ></SwipeListView>
       </View>
     </View>
   );
@@ -165,13 +208,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   todos: { paddingHorizontal: deviceWidth * 0.05, marginTop: 20 },
+
   todo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     backgroundColor: theme.todoBg,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
+    height: 70,
+    justifyContent: "center",
     marginBottom: 10,
-    borderRadius: 10,
+    paddingLeft: 20,
+  },
+  hidden: {
+    flexDirection: "row",
+    height: 70,
+  },
+  hiddenleft: { flex: 1, flexDirection: "row" },
+  hiddenEdit: { width: 75, height: "100%", backgroundColor: "green" },
+  hiddenDelete: { width: 75, height: "100%", backgroundColor: "orange" },
+  hiddenright: { flex: 1, flexDirection: "row", justifyContent: "flex-end" },
+  hiddenDone: {
+    width: 100,
+    height: "100%",
+    backgroundColor: "red",
+    alignContent: "flex-end",
   },
 });
