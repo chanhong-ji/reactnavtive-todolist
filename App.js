@@ -7,15 +7,41 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { theme } from "./colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const deviceWidth = Dimensions.get("window").width;
+const STORAGE_KEY = "@todos";
 
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [todos, setTodos] = useState({});
+
+  const loadTodos = async () => {
+    try {
+      await AsyncStorage.getItem(STORAGE_KEY).then((value) =>
+        setTodos(JSON.parse(value) || {})
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const saveTodos = async (todos) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      console.log(todos);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -41,18 +67,20 @@ export default function App() {
           }}
           value={text}
           returnKeyType="send"
-          onSubmitEditing={() => {
+          onSubmitEditing={async () => {
+            const newTodos = {
+              ...todos,
+              [Date.now()]: { text, working },
+            };
             if (text == "") return;
-            setTodos((prev) => ({
-              ...prev,
-              [Date.now()]: { text, work: working },
-            }));
+            setTodos(newTodos);
+            await saveTodos(newTodos);
             setText("");
           }}
         ></TextInput>
         <ScrollView style={styles.todos}>
           {Object.keys(todos).map((key) =>
-            todos[key].work === working ? (
+            todos[key].working === working ? (
               <View style={styles.todo} key={key}>
                 <Text>{todos[key].text}</Text>
               </View>
