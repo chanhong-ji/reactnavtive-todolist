@@ -1,7 +1,9 @@
 export const theme = {
-  bg: "black",
-  title: "white",
-  todoBg: "gainsboro",
+  bg: "white",
+  title: "black",
+  titleInactive: "gainsboro",
+  inputBg: "white",
+  todoBg: "white",
   text: "black",
   doneText: "grey",
 };
