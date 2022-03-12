@@ -1,5 +1,7 @@
 export const theme = {
   bg: "black",
   title: "white",
-  todoBg: "grey",
+  todoBg: "gainsboro",
+  text: "black",
+  doneText: "grey",
 };

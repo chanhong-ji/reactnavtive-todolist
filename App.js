@@ -4,14 +4,12 @@ import {
   View,
   TouchableOpacity,
   TextInput,
-  ScrollView,
   Dimensions,
   Alert,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { theme } from "./colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Fontisto } from "@expo/vector-icons";
 import { SwipeListView } from "react-native-swipe-list-view";
 
 const deviceWidth = Dimensions.get("window").width;
@@ -58,7 +56,7 @@ export default function App() {
   const createTodo = async () => {
     const newTodos = {
       ...todos,
-      [Date.now()]: { text, working },
+      [Date.now()]: { text, working, done: false },
     };
     if (text == "") return;
     setTodos(newTodos);
@@ -91,6 +89,13 @@ export default function App() {
         setTodos(newTodos);
       }
     });
+  };
+
+  const doneTodo = (key) => {
+    const newTodos = { ...todos };
+    newTodos[key].done = !newTodos[key].done;
+    saveTodos(newTodos);
+    setTodos(newTodos);
   };
 
   useEffect(() => {
@@ -139,14 +144,26 @@ export default function App() {
           contentContainerStyle={styles.todos}
           data={Object.keys(todos).reduce((result, key) => {
             if (todos[key].working === working) {
-              return [...result, { key, text: todos[key].text, working }];
+              return [...result, { key, text: todos[key].text }];
             } else {
               return [...result];
             }
           }, [])}
-          renderItem={(data, rowMap) => (
+          renderItem={(data) => (
             <View style={styles.todo} key={data.item.key}>
-              <Text>{data.item.text}</Text>
+              <Text
+                style={{
+                  textDecorationLine: todos[data.item.key].done
+                    ? "line-through"
+                    : "none",
+                  fontSize: 20,
+                  color: todos[data.item.key].done
+                    ? theme.doneText
+                    : theme.text,
+                }}
+              >
+                {data.item.text}
+              </Text>
             </View>
           )}
           renderHiddenItem={(data) => (
@@ -164,9 +181,11 @@ export default function App() {
                 </TouchableOpacity>
               </View>
               <View style={styles.hiddenright}>
-                <TouchableOpacity onPress={() => console.log("done pressed")}>
+                <TouchableOpacity onPress={() => doneTodo(data.item.key)}>
                   <View style={styles.hiddenDone}>
-                    <Text>Done</Text>
+                    <Text>
+                      {todos[data.item.key].done === false ? "Done" : "To do"}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -215,6 +234,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 10,
     paddingLeft: 20,
+    fontSize: 40,
   },
   hidden: {
     flexDirection: "row",
